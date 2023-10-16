@@ -229,14 +229,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         singleproxy["name"] = remark;
         singleproxy["server"] = x.Hostname;
         singleproxy["port"] = x.Port;
-        if (!x.PublicKey.empty()){
-            singleproxy["reality-opts"]["public-key"] = x.PublicKey;
-            if (!x.ShortId.empty())
-                singleproxy["reality-opts"]["short-id"] = x.ShortId;
-        }
-        singleproxy["client-fingerprint"] = "chrome";
-        if (!x.Fingerprint.empty())
-            singleproxy["client-fingerprint"] = x.Fingerprint;
+
         switch (x.Type) {
             case ProxyType::Shadowsocks:
                 //latest clash core removed support for chacha20 encryption
@@ -351,11 +344,23 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
                     singleproxy["alpn"].push_back(x.Alpn);
                 if (!x.OBFSParam.empty())
                     singleproxy["obfs"] = x.OBFSParam;
+                if (!x.MPort.empty()) {
+                    singleproxy["ports"] = x.MPort;
+                    singleproxy.remove("port");
+                };
                 break;
             case ProxyType::VLESS:
                 singleproxy["type"] = "vless";
                 singleproxy["uuid"] = x.UserId;
                 singleproxy["tls"] = x.TLSSecure;
+                singleproxy["client-fingerprint"] = "chrome";
+                if (!x.Fingerprint.empty())
+                    singleproxy["client-fingerprint"] = x.Fingerprint;
+                if (!x.PublicKey.empty()){
+                    singleproxy["reality-opts"]["public-key"] = x.PublicKey;
+                    if (!x.ShortId.empty())
+                        singleproxy["reality-opts"]["short-id"] = x.ShortId;
+                }
                 if (!tfo.is_undef())
                     singleproxy["tfo"] = tfo.get();
                 if (xudp && udp)
