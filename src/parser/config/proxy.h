@@ -20,7 +20,8 @@ enum ProxyType
     Snell,
     HTTP,
     HTTPS,
-    SOCKS5
+    SOCKS5,
+    WireGuard,
 };
 
 inline String getProxyTypeName(int type)
@@ -49,6 +50,8 @@ inline String getProxyTypeName(int type)
         return "HTTPS";
     case ProxyType::SOCKS5:
         return "SOCKS5";
+    case ProxyType::WireGuard:
+        return "wireguard";
     default:
         return "Unknown";
     }
@@ -108,10 +111,13 @@ struct Proxy
 
     String Fingerprint;
     String PublicKey;
+    String WireGuardPublicKey;
+    String WireGuardPrivateKey;
     String ShortId;
 
     String OBFSPassword;
 
+    std::vector<String> DNS;
 };
 
 #define SS_DEFAULT_GROUP "SSProvider"

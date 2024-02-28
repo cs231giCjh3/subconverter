@@ -532,6 +532,19 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
             if(std::all_of(x.Password.begin(), x.Password.end(), ::isdigit) && !x.Password.empty())
                 singleproxy["password"].SetTag("str");
             break;
+        case ProxyType::WireGuard:
+            singleproxy["dns"] = x.DNS;
+            singleproxy["group"] = x.Group;
+            singleproxy["ip"] = x.Host;
+            singleproxy["name"] = x.Remark;
+            singleproxy["port"] = x.Port;
+            singleproxy["private-key"] = x.WireGuardPrivateKey;
+            singleproxy["public-key"] = x.WireGuardPublicKey;
+            singleproxy["remote-dns-resolve"] = true;
+            singleproxy["server"] = x.Hostname;
+            singleproxy["type"] = getProxyTypeName(x.Type);
+            singleproxy["udp"] = true;
+            break;
         default:
             continue;
         }

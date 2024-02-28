@@ -172,6 +172,15 @@ void trojanConstruct(Proxy &node, const std::string &group, const std::string &r
     node.GRPCServiceName = path.empty() ? "/" : urlEncode(urlDecode(trim(path)));
 }
 
+void wireguardConstruct(Proxy &node, const std::string &group, const std::string &remarks, const std::string &server, const std::string &port, const std::string &privatekey, const std::string &publickey, tribool udp, std::string host, std::vector<std::string> dns)
+{
+    commonConstruct(node, ProxyType::WireGuard, group, remarks, server, port, udp, tribool(), tribool(), tribool());
+    node.WireGuardPrivateKey = privatekey;
+    node.WireGuardPublicKey = publickey;
+    node.Host = host;
+    node.DNS = dns;
+}
+
 void snellConstruct(Proxy &node, const std::string &group, const std::string &remarks, const std::string &server, const std::string &port, const std::string &password, const std::string &obfs, const std::string &host, uint16_t version, tribool udp, tribool tfo, tribool scv)
 {
     commonConstruct(node, ProxyType::Snell, group, remarks, server, port, udp, tfo, scv, tribool());
@@ -877,6 +886,44 @@ void explodeTrojan(std::string trojan, Proxy &node)
         group = TROJAN_DEFAULT_GROUP;
 
     trojanConstruct(node, group, remark, server, port, psk, network, mode, host, path, flow, tls, tribool(), tfo, scv);
+}
+
+void explodeWireGuard(std::string wireguard, Proxy &node)
+{
+    std::string server, port, publicKey, privateKey, dns, ip, flag, name;
+    std::vector<std::string> dnsList;
+    tribool udp;
+    string_size pos = wireguard.find("#");
+    if(pos != wireguard.npos)
+    {
+        name = urlDecode(wireguard.substr(pos + 1));
+        wireguard = wireguard.substr(0, pos);
+    }
+
+    wireguard = wireguard.substr(5);
+    pos = wireguard.rfind(":");
+    if(pos == wireguard.npos)
+    {
+        return;
+    }
+    server = wireguard.substr(0, pos);
+    wireguard = wireguard.substr(pos + 1);
+    pos = wireguard.find("?");
+    if(pos == wireguard.npos)
+    {
+        return;
+    }
+    port = wireguard.substr(0, pos);
+    wireguard = wireguard.substr(pos + 1);
+
+    publicKey = getUrlArg(wireguard, "publicKey");
+    privateKey = getUrlArg(wireguard, "privateKey");
+    dns = getUrlArg(wireguard, "dns");
+    dnsList = split(dns, ",");
+    ip = getUrlArg(wireguard, "ip");
+    udp = getUrlArg(wireguard, "udp") == "1" ? true : false;
+    flag = getUrlArg(wireguard, "flag");
+    wireguardConstruct(node, flag, name, server, port, privateKey, publicKey, udp, ip, dnsList);
 }
 
 void explodeQuan(const std::string &quan, Proxy &node)
@@ -2441,6 +2488,8 @@ void explode(const std::string &link, Proxy &node)
         explodeNetch(link, node);
     else if(strFind(link, "trojan://") || strFind(link, "trojan-go://"))
         explodeTrojan(link, node);
+    else if(strFind(link, "wg://"))
+        explodeWireGuard(link, node);
     else if(isLink(link))
         explodeHTTPSub(link, node);
 }
