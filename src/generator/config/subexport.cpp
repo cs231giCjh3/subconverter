@@ -234,9 +234,11 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
             if (!x.ShortId.empty())
                 singleproxy["reality-opts"]["short-id"] = x.ShortId;
         }
-        singleproxy["client-fingerprint"] = "chrome";
-        if (!x.Fingerprint.empty())
-            singleproxy["client-fingerprint"] = x.Fingerprint;
+        if (x.Type != ProxyType::WireGuard){
+            singleproxy["client-fingerprint"] = "chrome";
+            if (!x.Fingerprint.empty())
+                singleproxy["client-fingerprint"] = x.Fingerprint;
+        }
         switch (x.Type) {
             case ProxyType::Shadowsocks:
                 //latest clash core removed support for chacha20 encryption
@@ -531,6 +533,21 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
             }
             if(std::all_of(x.Password.begin(), x.Password.end(), ::isdigit) && !x.Password.empty())
                 singleproxy["password"].SetTag("str");
+            break;
+        case ProxyType::WireGuard:
+            if (x.DNS.size() > 1)
+                singleproxy["dns"] = x.DNS;
+            singleproxy["group"] = x.Group;
+            singleproxy["ip"] = x.Host;
+            singleproxy["name"] = x.Remark;
+            singleproxy["port"] = x.Port;
+            singleproxy["private-key"] = x.WireGuardPrivateKey;
+            singleproxy["public-key"] = x.WireGuardPublicKey;
+            singleproxy["remote-dns-resolve"] = true;
+            singleproxy["server"] = x.Hostname;
+            singleproxy["type"] = getProxyTypeName(x.Type);
+            singleproxy["udp"] = true;
+            singleproxy["mtu"] = 1280;
             break;
         default:
             continue;
